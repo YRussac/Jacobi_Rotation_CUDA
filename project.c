@@ -231,13 +231,31 @@ int main(){
   int d; // dimension of the original matrix
   int i;
   int j;
+  int nb_mat;
 
   d = 5;
-  N = 1;
-  P = 20;
+  N = 100;
+  P = 500;
 
   // matrix part
   float ** a;
+
+  for (nb_mat = 0; nb_mat<N;nb_mat++){
+    // Random Matrix generation
+    printf("Treatment of matrix %d out of %d \n", nb_mat,N);
+    a = matrix(0, d,0, d);
+    for (i = 0; i< d; i++){
+      for (j=0; j<d; j++){
+        a[i][j] = (double)(10.*rand())/(double)(RAND_MAX);
+      }
+    }
+    Jacobi_product(a, d, P);
+
+    // freeing the memory
+    free_matrix(a, 0, d, 0, d);
+  }
+
+
 
 /*
   // initial matrix definition
@@ -261,19 +279,10 @@ int main(){
   */
 
   // random matrix initialization
-  a = matrix(0, d,0, d);
-  for (i = 0; i< d; i++){
-    for (j=0; j<d; j++){
-      a[i][j] = (double)(10.*rand())/(double)(RAND_MAX);
-    }
-  }
-
-
-  Jacobi_product(a, d, P);
 
 
   // freeing the Memory
-  free_matrix(a, 0, d, 0, d);
+
 
   return 0;
 }
