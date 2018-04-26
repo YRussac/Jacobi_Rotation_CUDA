@@ -141,37 +141,105 @@ void rotate(float **a, int i, int j, int k, int l, float c, float s){
   a[k][l] = s*g+ c*h;
 }
 
-//void Jacobi_product(**a, int P, int *ip, int *iq, *int theta)
+void Jacobi_product(float **a, int d, int P){
+  int *ip; // The first indice of the different P Jacobi Rotations
+  int *iq; // The second indice of the different P Jacobi Rotations
+  int i,j;
+  int step;
+  int rand1;
+  int rand2;
+
+  ip = ivector(0,P);
+  iq = ivector(0,P);
+
+  float* theta; // contains the angle at each step
+
+  theta = vector(0,P);
+  float *s; // Contains the sine values of the angle for the P rotations
+  float *c; // Contains the cosine values of the angle for the P rotations
+
+
+  c = vector(0,P);
+  s = vector(0,P);
+
+  // TODO generate uniform sur 0,2Pi de longueur P
+  double temp;
+
+  for (i=0;i<P; i ++){
+    temp = (double)(2*M_PI*rand())/(double)(RAND_MAX);
+    theta[i] = temp;
+    c[i] = cos(theta[i]);
+    s[i] = sin(theta[i]);
+    rand1 = rand()%d;
+    rand2 = rand()%d;
+    while (rand2 == rand1){
+      printf("encore egalité \n");
+      rand2 = rand()%d;
+    }
+    ip[i] = rand1;
+    iq[i] = rand2;
+  }
+
+  printf("Initial matrix given\n");
+  for (i = 0; i < d; i++) {
+        for (j = 0 ; j < d; j++) {
+           printf("%f\t", a[i][j]);
+        }
+        printf("\n");
+     }
+
+  for (step = 0; step<P;step++){
+    printf("Rotation n°%d out of %d \n",step, P-1);
+    printf("theta is equal to %f \n", theta[i]);
+    printf("(ip,iq) = (%d,%d) \n", ip[step],iq[step]);
+    for (j=0; j< d; j ++){
+      rotate(a,ip[step],j,iq[step],j,c[step],s[step]);
+    }
+    for (i = 0; i < d; i++) {
+          for (j = 0 ; j < d; j++) {
+             printf("%f\t", a[i][j]);
+          }
+          printf("\n");
+       }
+     }
+
+     printf("------------\n");
+     printf("Final matrix obtained\n");
+     printf("------------\n");
+     for (i = 0; i < d; i++) {
+           for (j = 0 ; j < d; j++) {
+              printf("%f\t", a[i][j]);
+           }
+           printf("\n");
+        }
+
+     // freeing the memory
+     free_vector(s,0,P);
+     free_vector(c,0,P);
+     free_vector(theta,0,P);
+     free_ivector(ip,0,P);
+     free_ivector(iq,0,P);
+
+}
 
 
 
 
 int main(){
-  int *ip; // The first indice of the different P Jacobi Rotations
-  int *iq; // The second indice of the different P Jacobi Rotations
   int P;  // The number of rotations considered in the program
   int N; // Number of matrix a which must be multiplied (to be implemented)
   int d; // dimension of the original matrix
-  float *s; // Contains the sine values of the angle for the P rotations
-  float *c; // Contains the cosine values of the angle for the P rotations
-  int i,j;
-  int step;
+  int i;
+  int j;
+
   d = 5;
   N = 1;
-  P = 2;
-
-  /// indices part
-  ip = ivector(0,P);
-  iq = ivector(0,P);
-
-  ip[0] = 2;
-  ip[1] = 3;
-  iq[0] = 4;
-  iq[1] = 1;
+  P = 20;
 
   // matrix part
   float ** a;
 
+/*
   // initial matrix definition
   a = matrix(0, d,0, d);
   for (i = 0; i< d; i++){
@@ -190,57 +258,22 @@ int main(){
   a[3][0] = 5.;
   a[0][3] = 5.;
   a[3][3] = 4.;
+  */
 
-  // angle part
-  float* theta; // contains the angle at each step
-  theta = vector(0,P);
-  c = vector(0,P);
-  s = vector(0,P);
-
-
-  theta[0] = M_PI/2.;
-  theta[1] = M_PI/2.;
-
-
-  for (i=0;i<P;i++){
-    c[i] = cos(theta[i]);
-    s[i] = sin(theta[i]);
+  // random matrix initialization
+  a = matrix(0, d,0, d);
+  for (i = 0; i< d; i++){
+    for (j=0; j<d; j++){
+      a[i][j] = (double)(10.*rand())/(double)(RAND_MAX);
+    }
   }
 
-  printf(" a, theta, c, s, ip, iq initialized....\n ");
 
-  printf("sanity check for theta= %f : c[1]= %f\n",theta[1], c[1]);
-  printf("sanity check for theta = %f : s[1]= %f\n",theta[1], s[1]);
+  Jacobi_product(a, d, P);
 
-
-  for (i = 0; i < d; i++) {
-        for (j = 0 ; j < d; j++) {
-           printf("%f\t", a[i][j]);
-        }
-        printf("\n");
-     }
-
-
-  for (step = 0; step<P;step++){
-    printf("Rotation n°%d out of %d \n",step, P-1);
-    printf("(ip,iq) = (%d,%d) \n", ip[step],iq[step]);
-    for (j=0; j< d; j ++){
-      rotate(a,ip[step],j,iq[step],j,c[step],s[step]);
-    }
-    for (i = 0; i < d; i++) {
-          for (j = 0 ; j < d; j++) {
-             printf("%f\t", a[i][j]);
-          }
-          printf("\n");
-       }
-     }
 
   // freeing the Memory
   free_matrix(a, 0, d, 0, d);
-  free_vector(s,0,P);
-  free_vector(c,0,P);
-  free_vector(theta,0,P);
-  free_ivector(ip,0,P);
-  free_ivector(iq,0,P);
+
   return 0;
 }
