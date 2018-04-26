@@ -137,11 +137,11 @@ void rotate(float **a, int i, int j, int k, int l, float c, float s){
   float g;
   g = a[i][j];
   h = a[k][l];
-  a[i][j] = c*g + s*h;
-  a[k][l] = -s*g+ c*h;
+  a[i][j] = c*g - s*h;
+  a[k][l] = s*g+ c*h;
 }
 
-//void Jacobi_product(int P)
+//void Jacobi_product(**a, int P, int *ip, int *iq, *int theta)
 
 
 
@@ -225,9 +225,8 @@ int main(){
     printf("Rotation n°%d out of %d \n",step, P-1);
     printf("(ip,iq) = (%d,%d) \n", ip[step],iq[step]);
     for (j=0; j< d; j ++){
-      rotate(a,j,ip[step],j,iq[step],c[step],s[step]);
+      rotate(a,ip[step],j,iq[step],j,c[step],s[step]);
     }
-    printf("rotated matrix is:\n");
     for (i = 0; i < d; i++) {
           for (j = 0 ; j < d; j++) {
              printf("%f\t", a[i][j]);
