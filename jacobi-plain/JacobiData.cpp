@@ -11,6 +11,9 @@
 #include "boost/math/constants/constants.hpp"
 float pi = (float) boost::math::constants::pi<long double>();
 
+JacobiData::JacobiData() :
+    JacobiData(10, 3, 0, 10){}
+
 // Parameterized Constructor
 JacobiData::JacobiData(int P, int d, int min_A, int max_A) {
     this->P = P;

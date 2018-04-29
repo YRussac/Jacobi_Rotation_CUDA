@@ -3,6 +3,8 @@
 class JacobiData {
 
 public:
+    JacobiData();
+
     JacobiData(int P, int d, int min_A, int max_A);
 
     void fill_indices_vectors();

@@ -2,9 +2,6 @@
 #include <string>
 #include "random"
 
-#define NR_END 1
-#define FREE_ARG char*
-
 void print_matrix(float** matrix, int d, std::string message){
     std::string line_break ("------------\n");
 
