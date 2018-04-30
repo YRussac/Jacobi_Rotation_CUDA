@@ -97,6 +97,7 @@ void JacobiData::jacobi_product_parallel_1(int block_size) {
         for (int i = index; i < d; ++stride) {
             rotate(A, ip[step], i, iq[step], c[step], s[step]);
         }
+        cudaDeviceSynchronize();
     }
 }
 
@@ -143,6 +144,6 @@ void JacobiData::jacobi_product_parallel(int block_size) {
                 rotate(A, ip[mat_idx], i, iq[mat_idx], c[col_idx], s[col_idx]);
             }
         }
-
+        cudaDeviceSynchronize();
     }
 }
