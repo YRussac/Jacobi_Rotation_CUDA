@@ -1,5 +1,5 @@
-#include "JacobiData.h"
 #include "utils.h"
+#include "JacobiData.h"
 
 #include "cstdio"
 #include "cstddef"
@@ -58,6 +58,7 @@ void JacobiData::fill_angle_vectors() {
     }
 }
 
+__device__
 void JacobiData::rotate(float* a, int i, int j, int k, int l, float c, float s) {
     float h = a[vec_idx(i, j, d)];
     float g = a[vec_idx(k, l, d)];
@@ -76,20 +77,11 @@ void JacobiData::free_memory() {
 }
 
 
-
+__device__
 void JacobiData::jacobi_product() {
-
-    print_matrix(A, d, "Initial matrix given");
-
     for (int step = 0; step < P; step++) {
-        printf("Rotation n°%d out of %d \n", step, P - 1);
-        printf("theta is equal to %f \n", theta[step]);
-        printf("(ip,iq) = (%d,%d) \n", ip[step], iq[step]);
         for (int j = 0; j < d; j++) {
             rotate(A, ip[step], j, iq[step], j, c[step], s[step]);
         }
-        print_matrix(A, d, "Matrix A");
     }
-
-    print_matrix(A, d, "Final matrix obtained");
 }
