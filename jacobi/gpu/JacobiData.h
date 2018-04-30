@@ -10,7 +10,7 @@ public:
     void fill_indices_vectors();
 
     __device__
-    void rotate(float *a, int i, int j, int k, int l, float c, float s);
+    void rotate(float *a, int i, int j, int k, float c, float s);
 
     __device__
     void jacobi_product();
@@ -19,7 +19,15 @@ public:
 
     void fill_angle_vectors();
 
-//private:
+    __device__
+    void jacobi_product_parallel_1(int block_size);
+
+    __device__
+    void jacobi_product_parallel(int block_size);
+
+    int fetch_loop_range(int curr_idx);
+
+    //private:
     int d; // The matrix dimension
     int P; // The number of Jacobi matrices
 
