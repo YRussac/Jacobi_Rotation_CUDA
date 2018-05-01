@@ -8,20 +8,23 @@
 #include "random"
 #include "iostream"
 #include "set"
+#include "algorithm"
 
 #include "boost/math/constants/constants.hpp"
+
 float pi = (float) boost::math::constants::pi<long double>();
 
 JacobiData::JacobiData() :
-    JacobiData(10, 3, 0, 10){}
+        JacobiData(3, 3, 0, 10) {}
 
 // Parameterized Constructor
 JacobiData::JacobiData(int P, int d, float min_A, float max_A) {
     this->P = P;
     this->d = d;
+//    this->on_gpu = on_gpu;
     fill_indices_vectors();
     fill_angle_vectors();
-    A = random_array(d*d, min_A, max_A);
+    A = random_array(d * d, min_A, max_A);
 }
 
 void JacobiData::fill_indices_vectors() {
@@ -33,7 +36,7 @@ void JacobiData::fill_indices_vectors() {
     ip = i_vector(P);
     iq = i_vector(P);
     for (int i = 0; i < P; ++i) {
-        int rand1 =  dis(gen);
+        int rand1 = dis(gen);
         int rand2 = rand1;
         while (rand2 == rand1) {
             rand2 = dis(gen);
@@ -59,14 +62,6 @@ void JacobiData::fill_angle_vectors() {
     }
 }
 
-__device__
-void JacobiData::rotate(float* a, int i, int j, int k, float c, float s) {
-    float h = a[vec_idx(i, j, d)];
-    float g = a[vec_idx(k, j, d)];
-    a[vec_idx(i, j, d)] = c * g - s * h;
-    a[vec_idx(k, j, d)] = s * g + c * h;
-}
-
 void JacobiData::free_memory() {
     // freeing the memory
     free_f_vec(s);
@@ -77,8 +72,26 @@ void JacobiData::free_memory() {
     free_f_vec(A);
 }
 
+void JacobiData::debug_fill() {
+    int new_arr_1[] = {1, 2, 0};
+    std::copy(new_arr_1, new_arr_1 + 3, ip);
 
-__device__
+    int new_arr_2[] = {0, 1, 2};
+    std::copy(new_arr_2, new_arr_2 + 3, iq);
+
+    float new_arr_3[] = {0, pi / 4, 2 * pi / 3};
+    std::copy(new_arr_3, new_arr_3 + 3, theta);
+
+    for (int i = 0; i < 3; ++i) {
+        c[i] = (float) cos(theta[i]);
+        s[i] = (float) sin(theta[i]);
+    }
+
+    float new_arr_4[] = {0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
+    std::copy(new_arr_4, new_arr_4 + 9, A);
+}
+
+__device__ __host__
 void JacobiData::jacobi_product() {
     for (int step = 0; step < P; step++) {
         for (int j = 0; j < d; j++) {
@@ -87,63 +100,75 @@ void JacobiData::jacobi_product() {
     }
 }
 
+__device__ __host__
+void JacobiData::rotate(float *a, int i, int j, int k, float c, float s) {
+    if (i > k) {
+        swap(&i, &k);
+    }
+    float h = a[vec_idx(i, j, d)];
+    float g = a[vec_idx(k, j, d)];
+    a[vec_idx(i, j, d)] = s * g + c * h;
+    a[vec_idx(k, j, d)] = c * g - s * h;
+}
+
 __device__
-void JacobiData::jacobi_product_parallel_1(int block_size) {
-//    Paallelise the matrix rotation only
+void JacobiData::jacobi_product_parallel_cols(int block_size) {
+//    Parallelise the matrix rotation only
+    int index = threadIdx.x;
+    int stride = block_size;
     for (int step = 0; step < P; step++) {
-//      Spread the columns rotations over the threads
-        int index = threadIdx.x;
-        int stride = block_size;
-        for (int i = index; i < d; ++stride) {
+// Spread the columns rotations over the threads
+        for (int i = index; i < d; i+=stride) {
             rotate(A, ip[step], i, iq[step], c[step], s[step]);
         }
-        cudaDeviceSynchronize();
-    }
+        //synchronize the local threads in the block
+        __syncthreads();
+ }
 }
-
-__device__
-int JacobiData::fetch_loop_range(int curr_idx){
-    // TODO : debug and check
-//    Returns the int of the index up to which the next product can performed in parallel
-    std::set<int> idx_set;
-    std::set<int>::iterator it;
-    std::pair<std::set<int>::iterator,bool> ret;
-
-    int i = curr_idx;
-    bool stop = false;
-    while (!stop) {
-        const bool is_in_1 = idx_set.find(ip[i]) != idx_set.end();
-        const bool is_in_2 = idx_set.find(iq[i]) != idx_set.end();
-        i += 1;
-        if (is_in_1 or is_in_2 or i == P){
-            stop = true;
-        }
-    }
-    return i;
-}
-
-__device__
-void JacobiData::jacobi_product_parallel(int block_size) {
-    // TODO : debug and check
-//    Parallelise the matrix rotation only
-    int curr_p_idx = 0;
-    int curr_max_p = fetch_loop_range(curr_p_idx);
-
-    while (curr_p_idx < P){
-        int nb_p_mat = curr_max_p - curr_p_idx;
-        for (int step = 0; step < nb_p_mat*d; step++) {
-//      Spread the columns rotations over the threads
-            int index = threadIdx.x;
-            int stride = block_size;
-            int col_idx;
-            int mat_idx;
-
-            for (int i = index; i < d; ++stride) {
-                col_idx = i % d;
-                mat_idx = (int) i / d;
-                rotate(A, ip[mat_idx], i, iq[mat_idx], c[col_idx], s[col_idx]);
-            }
-        }
-        cudaDeviceSynchronize();
-    }
-}
+//
+//__device__
+//int JacobiData::fetch_loop_range(int curr_idx){
+//    // TODO : debug and check
+////    Returns the int of the index up to which the next product can performed in parallel
+//    std::set<int> idx_set;
+//    std::set<int>::iterator it;
+//    std::pair<std::set<int>::iterator,bool> ret;
+//
+//    int i = curr_idx;
+//    bool stop = false;
+//    while (!stop) {
+//        const bool is_in_1 = idx_set.find(ip[i]) != idx_set.end();
+//        const bool is_in_2 = idx_set.find(iq[i]) != idx_set.end();
+//        i += 1;
+//        if (is_in_1 or is_in_2 or i == P){
+//            stop = true;
+//        }
+//    }
+//    return i;
+//}
+//
+//__device__
+//void JacobiData::jacobi_product_parallel(int block_size) {
+//    // TODO : debug and check
+////    Parallelise the matrix rotation only
+//    int curr_p_idx = 0;
+//    int curr_max_p = fetch_loop_range(curr_p_idx);
+//
+//    while (curr_p_idx < P){
+//        int nb_p_mat = curr_max_p - curr_p_idx;
+//        for (int step = 0; step < nb_p_mat*d; step++) {
+////      Spread the columns rotations over the threads
+//            int index = threadIdx.x;
+//            int stride = block_size;
+//            int col_idx;
+//            int mat_idx;
+//
+//            for (int i = index; i < d; ++stride) {
+//                col_idx = i % d;
+//                mat_idx = (int) i / d;
+//                rotate(A, ip[mat_idx], i, iq[mat_idx], c[col_idx], s[col_idx]);
+//            }
+//        }
+//        cudaDeviceSynchronize();
+//    }
+//}

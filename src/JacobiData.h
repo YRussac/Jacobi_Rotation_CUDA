@@ -9,20 +9,18 @@ public:
 
     void fill_indices_vectors();
 
-    __device__
     void rotate(float *a, int i, int j, int k, float c, float s);
 
-    __device__
     void jacobi_product();
 
     void free_memory();
 
     void fill_angle_vectors();
 
-    __device__
-    void jacobi_product_parallel_1(int block_size);
+    void debug_fill();
 
-    __device__
+    void jacobi_product_parallel_cols(int block_size);
+
     void jacobi_product_parallel(int block_size);
 
     int fetch_loop_range(int curr_idx);
@@ -37,4 +35,5 @@ public:
     float *c; // Contains the cosine values of the angle for the P rotations
     float *theta;
     float *A; // Flattened array of the matrix A
+//    int on_gpu;
 };
