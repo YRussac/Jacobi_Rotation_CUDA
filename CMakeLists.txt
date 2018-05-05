@@ -1,9 +1,9 @@
 cmake_minimum_required (VERSION 2.6)
 
-include_directories( jacobi)
+include_directories(src)
 
 set(CMAKE_CXX_STANDARD 11)
 
-project (Jacobi)
-add_library (my_library STATIC jacobi/JacobiData.cpp)
-add_executable(Jacobi jacobi/main.cpp)
+project (debug)
+add_library (my_library STATIC src/debug/debug.cpp)
+add_executable(debug src/debug/debug.cpp)

@@ -2,12 +2,10 @@
 #include <string>
 #include "random"
 
-
 __host__ __device__
 int vec_idx(int row, int col, int d){
     return row * d + col;
 }
-
 
 float* f_vector(int vec_size){
 //    float* vec = new float[vec_size];

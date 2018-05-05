@@ -1,11 +1,12 @@
 #include <string>
+#include "set.cpp"
 
 class JacobiData {
 
 public:
     JacobiData();
 
-    JacobiData(int P, int d, float min_A, float max_A);
+    JacobiData(int P, int d, float min_A, float max_A, int n_threads);
 
     void fill_indices_vectors();
 
@@ -34,6 +35,6 @@ public:
     float *s; // Contains the sine values of the angle for the P rotations
     float *c; // Contains the cosine values of the angle for the P rotations
     float *theta;
-    float *A; // Flattened array of the matrix A
-//    int on_gpu;
+    float *A;// Flattened array of the matrix A
+    Set* sets; // Sets used for the parallelisation
 };

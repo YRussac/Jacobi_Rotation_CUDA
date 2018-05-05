@@ -83,3 +83,5 @@ fabric.properties
 # Editor-based Rest Client
 .idea/httpRequests
 
+/src/check/.test.py.swp
+/src/check/test_values
