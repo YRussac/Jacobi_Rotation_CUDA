@@ -159,7 +159,6 @@ int JacobiData::fetch_loop_range(int curr_idx) {
 
 __device__
 void JacobiData::jacobi_product_parallel(int block_size) {
-    // TODO : debug and check
     int col_idx;
     int mat_idx;
 
@@ -170,8 +169,7 @@ void JacobiData::jacobi_product_parallel(int block_size) {
     int nb_p_mat = curr_max_p - curr_p_idx;
     int index = threadIdx.x;
     int stride = block_size;
-//
-    int i = index;
+
         for (int i = index; i < nb_p_mat * d; i+=stride) {
             col_idx = i % d;
             mat_idx = (int) i / d + curr_p_idx;
