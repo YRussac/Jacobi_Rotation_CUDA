@@ -18,20 +18,38 @@ void testCUDA(cudaError_t error, const char *file, int line){
 
 __global__ void compute(JacobiData *jacobi_array, int optimisation) {
 
+
+    if (optimisation == 0){
+        for (int i = 0; i < N_PROBLEMS; ++i) {
+            jacobi_array[i].jacobi_product();
+        }
+    }
+    else{
         int index = blockIdx.x;
         int stride = N_BLOCKS;
         for (int i = index; i < N_PROBLEMS; i += stride) {
-            if (optimisation == 1){
-                jacobi_array[i].jacobi_product();
-            }
-            if (optimisation == 2){
-                jacobi_array[i].jacobi_product_parallel_cols(N_THREADS);
-            }
-            if (optimisation == 3) {
-                jacobi_array[i].jacobi_product_parallel(N_THREADS);
+            if (threadIdx.x == 0){
+
+                clock_t start_time = clock();
+
+                if (optimisation == 1){
+                    jacobi_array[i].jacobi_product();
+                }
+                if (optimisation == 2){
+                    jacobi_array[i].jacobi_product_parallel_cols(N_THREADS);
+                }
+                if (optimisation == 3) {
+                    jacobi_array[i].jacobi_product_parallel(N_THREADS);
+                }
+
+                clock_t stop_time = clock();
+                int duration = (int)(stop_time - start_time);
+//            printf("Hello from block %d, thread %d with the int %i %d\n",
+//                   blockIdx.x, threadIdx.x,i, duration);
             }
         }
     }
+}
 
 
 
@@ -57,8 +75,14 @@ float cpu_run(JacobiData *jacobi_array) {
         print_matrix(jacobi_array[0].A, jacobi_array[0].d, "Initial matrix A number 0");
     }
 
+    int duration;
     for (int i = 0; i < N_PROBLEMS; ++i) {
+        clock_t start_time = clock();
         jacobi_array[i].jacobi_product();
+        clock_t stop_time = clock();
+        duration = (int)(stop_time - start_time);
+//        printf("Hello from time %d\n",
+//               duration);
     }
 
     if(DEBUG){
@@ -125,19 +149,21 @@ int main() {
 //  Define the array of problems
     JacobiData *jacobi_array;
 
-    float duration = 0.;
-    for (int i = 0; i < NB_EXP; ++i) {
-        duration += cpu_run(jacobi_array);
-    }
-    duration /= NB_EXP;
-    printf("Execution time CPU : %f ms\n", duration);
+//    float duration = 0.;
+//    for (int i = 0; i < NB_EXP; ++i) {
+//        duration += cpu_run(jacobi_array);
+//    }
+//    duration /= NB_EXP;
+//    printf("Execution time CPU : %f ms\n", duration);
+//
+//    printf("\n------------------------------------------\n");
 
-    duration = 0.;
+    float duration = 0.;
     for (int i = 0; i < NB_EXP; ++i) {
         duration += gpu_run(jacobi_array, OPTIMISATION);
     }
     duration /= NB_EXP;
-    printf("Execution time GPU : %f ms\n", duration);
+    printf("Execution time GPU %i : %f ms\n",OPTIMISATION, duration);
 
     return 0;
 }
