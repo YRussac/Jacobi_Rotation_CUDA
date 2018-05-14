@@ -35,7 +35,7 @@ __global__ void compute(JacobiData *jacobi_array, int optimisation) {
 
 
 
-void cpu_run(JacobiData *jacobi_array) {
+float cpu_run(JacobiData *jacobi_array) {
     int count;
     cudaDeviceProp prop;
     testCUDA(cudaGetDeviceCount(&count));
@@ -53,7 +53,6 @@ void cpu_run(JacobiData *jacobi_array) {
             jacobi_array[j].debug_fill();
         }
     }
-    printf("------ CPU --------");
     if(DEBUG){
         print_matrix(jacobi_array[0].A, jacobi_array[0].d, "Initial matrix A number 0");
     }
@@ -74,10 +73,10 @@ void cpu_run(JacobiData *jacobi_array) {
     testCUDA(cudaEventRecord(stop,0));
     testCUDA(cudaEventSynchronize(stop));
     testCUDA(cudaEventElapsedTime(&TimerV,start,stop));
-    printf("Execution time: %f ms\n", TimerV);
+    return TimerV;
 }
 
-void gpu_run(JacobiData *jacobi_array, int optimisation) {
+float gpu_run(JacobiData *jacobi_array, int optimisation) {
     int count;
     cudaDeviceProp prop;
     testCUDA(cudaGetDeviceCount(&count));
@@ -95,8 +94,6 @@ void gpu_run(JacobiData *jacobi_array, int optimisation) {
             jacobi_array[j].debug_fill();
         }
     }
-
-    std::cout << "---- GPU " << OPTIMISATION << "--------";
 
     if(DEBUG){
         print_matrix(jacobi_array[0].A, jacobi_array[0].d, "Initial matrix A number 0");
@@ -120,12 +117,27 @@ void gpu_run(JacobiData *jacobi_array, int optimisation) {
     testCUDA(cudaEventRecord(stop,0));
     testCUDA(cudaEventSynchronize(stop));
     testCUDA(cudaEventElapsedTime(&TimerV,start,stop));
-    printf("Execution time: %f ms\n", TimerV);
+//    printf("Execution time: %f ms\n", TimerV);
+    return TimerV;
 }
+
 int main() {
 //  Define the array of problems
     JacobiData *jacobi_array;
-    cpu_run(jacobi_array);
-    gpu_run(jacobi_array, OPTIMISATION);
+
+    float duration = 0.;
+    for (int i = 0; i < NB_EXP; ++i) {
+        duration += cpu_run(jacobi_array);
+    }
+    duration /= NB_EXP;
+    printf("Execution time CPU : %f ms\n", duration);
+
+    duration = 0.;
+    for (int i = 0; i < NB_EXP; ++i) {
+        duration += gpu_run(jacobi_array, OPTIMISATION);
+    }
+    duration /= NB_EXP;
+    printf("Execution time GPU : %f ms\n", duration);
+
     return 0;
 }
