@@ -36,5 +36,6 @@ public:
     float *c; // Contains the cosine values of the angle for the P rotations
     float *theta;
     float *A;// Flattened array of the matrix A
-    Set* sets; // Sets used for the parallelisation
+//    Set* sets; // Sets used for the parallelisation
+    Set sets; // Sets used for the parallelisation
 };

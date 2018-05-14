@@ -27,10 +27,11 @@ JacobiData::JacobiData(int P, int d, float min_A, float max_A, int n_threads) {
     A = random_array(d * d, min_A, max_A);
 
 //    Allocate sets for parallel computing
-    cudaMallocManaged(&sets, n_threads * sizeof(Set));
-    for (int j = 0; j < n_threads; ++j) {
-        sets[j] = Set();
-    }
+    sets = Set();
+//    cudaMallocManaged(&sets, n_threads * sizeof(Set));
+//    for (int j = 0; j < n_threads; ++j) {
+//        sets[j] = Set();
+//    }
 }
 
 void JacobiData::fill_indices_vectors() {
@@ -135,27 +136,48 @@ void JacobiData::jacobi_product_parallel_cols(int block_size) {
     }
 }
 
+//__device__
+//int JacobiData::fetch_loop_range(int curr_idx) {
+////    Returns the int of the index up to which the next product can performed in parallel
+//    int i = curr_idx;
+//    bool stop = false;
+//    int index = threadIdx.x;
+//
+//    while (!stop) {
+//        const bool is_in_1 = sets[index].contains(ip[i]);
+//        const bool is_in_2 = sets[index].contains(iq[i]);
+//        if (is_in_1 or is_in_2 or i == P) {
+//            stop = true;
+//        }
+//        sets[index].insert(ip[i]);
+//        sets[index].insert(iq[i]);
+//        i += 1;
+//    }
+//    sets[index].reset();
+//    return i - 1;
+//}
+
+
 __device__
 int JacobiData::fetch_loop_range(int curr_idx) {
 //    Returns the int of the index up to which the next product can performed in parallel
     int i = curr_idx;
     bool stop = false;
-    int index = threadIdx.x;
+//    int index = threadIdx.x;
 
     while (!stop) {
-        const bool is_in_1 = sets[index].contains(ip[i]);
-        const bool is_in_2 = sets[index].contains(iq[i]);
+        const bool is_in_1 = sets.contains(ip[i]);
+        const bool is_in_2 = sets.contains(iq[i]);
         if (is_in_1 or is_in_2 or i == P) {
             stop = true;
         }
-        sets[index].insert(ip[i]);
-        sets[index].insert(iq[i]);
+        sets.insert(ip[i]);
+        sets.insert(iq[i]);
         i += 1;
     }
-    sets[index].reset();
+    sets.reset();
     return i - 1;
 }
-
 
 __device__
 void JacobiData::jacobi_product_parallel(int block_size) {
@@ -166,19 +188,19 @@ void JacobiData::jacobi_product_parallel(int block_size) {
     int curr_max_p = fetch_loop_range(curr_p_idx);
 
     while (curr_p_idx < P){
-    int nb_p_mat = curr_max_p - curr_p_idx;
-    int index = threadIdx.x;
-    int stride = block_size;
+        int nb_p_mat = curr_max_p - curr_p_idx;
+        int index = threadIdx.x;
+        int stride = block_size;
 
-        for (int i = index; i < nb_p_mat * d; i+=stride) {
-            col_idx = i % d;
-            mat_idx = (int) i / d + curr_p_idx;
-            rotate(A, ip[mat_idx], col_idx, iq[mat_idx], c[mat_idx], s[mat_idx]);
-        }
-    //synchronize the local threads in the block
-    __syncthreads();
-    curr_p_idx = curr_max_p;
-    curr_max_p = fetch_loop_range(curr_p_idx);
+            for (int i = index; i < nb_p_mat * d; i+=stride) {
+                col_idx = i % d;
+                mat_idx = (int) i / d + curr_p_idx;
+                rotate(A, ip[mat_idx], col_idx, iq[mat_idx], c[mat_idx], s[mat_idx]);
+            }
+        //synchronize the local threads in the block
+        __syncthreads();
+        curr_p_idx = curr_max_p;
+        curr_max_p = fetch_loop_range(curr_p_idx);
 
     }
 }
