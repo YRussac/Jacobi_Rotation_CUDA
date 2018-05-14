@@ -11,10 +11,8 @@ void testCUDA(cudaError_t error, const char *file, int line){
     }
 }
 
-// Has to be define in the compilation in order to get the correct value of
-// of the values __FILE__ and __LINE__
-#define testCUDA(error) (testCUDA(error, __FILE__,__LINE__))
 
+#define testCUDA(error) (testCUDA(error, __FILE__,__LINE__))
 
 __global__ void compute(JacobiData *jacobi_array, int optimisation) {
 
@@ -28,7 +26,7 @@ __global__ void compute(JacobiData *jacobi_array, int optimisation) {
         int index = blockIdx.x;
         int stride = N_BLOCKS;
         for (int i = index; i < N_PROBLEMS; i += stride) {
-            if (threadIdx.x == 0){
+            if (threadIdx.x == (N_THREADS - 1)){
 
                 clock_t start_time = clock();
 
@@ -36,10 +34,10 @@ __global__ void compute(JacobiData *jacobi_array, int optimisation) {
                     jacobi_array[i].jacobi_product();
                 }
                 if (optimisation == 2){
-                    jacobi_array[i].jacobi_product_parallel_cols(N_THREADS);
+                    jacobi_array[i].jacobi_product_parallel_cols(N_THREADS - 1);
                 }
                 if (optimisation == 3) {
-                    jacobi_array[i].jacobi_product_parallel(N_THREADS);
+                    jacobi_array[i].jacobi_product_parallel(N_THREADS - 1);
                 }
 
                 clock_t stop_time = clock();
@@ -50,6 +48,7 @@ __global__ void compute(JacobiData *jacobi_array, int optimisation) {
         }
     }
 }
+
 
 
 
@@ -147,8 +146,8 @@ float gpu_run(JacobiData *jacobi_array, int optimisation) {
 
 int main() {
 //  Define the array of problems
-    JacobiData *jacobi_array;
 
+    JacobiData *jacobi_array;
 //    float duration = 0.;
 //    for (int i = 0; i < NB_EXP; ++i) {
 //        duration += cpu_run(jacobi_array);
