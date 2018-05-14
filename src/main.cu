@@ -1,11 +1,12 @@
 #include "JacobiData.cu"
 #include "random"
 #include "iostream"
-
+#include <ctime>
 
 __global__ void compute(JacobiData *jacobi_array, int optimisation) {
     int block_size = blockDim.x;
     if (optimisation == 1){
+
         jacobi_array[blockIdx.x].jacobi_product_parallel_cols(block_size);
     }
     if (optimisation == 2){
@@ -54,12 +55,19 @@ int main() {
         print_matrix(jacobi_array[0].A, jacobi_array[0].d, "Initial matrix A number 0");
     }
 
-    if(OPTIMISATION == 0){
-        cpu_run();
-    }
-    else{
-        gpu_run(jacobi_array, OPTIMISATION);
-    }
+    std::clock_t start;
+    double duration;
+    start = std::clock();
+    cpu_run(jacobi_array);
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC * 1000;
+    std::cout<<"CPU: "<< duration <<'\n';
+
+
+//    std::clock_t start;
+    start = std::clock();
+    gpu_run(jacobi_array, OPTIMISATION);
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC * 1000;
+    std::cout<<"GPU: "<< duration <<'\n';
 
 
     for (int i = 0; i < N_PROBLEMS; ++i) {
