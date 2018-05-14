@@ -136,28 +136,6 @@ void JacobiData::jacobi_product_parallel_cols(int block_size) {
     }
 }
 
-//__device__
-//int JacobiData::fetch_loop_range(int curr_idx) {
-////    Returns the int of the index up to which the next product can performed in parallel
-//    int i = curr_idx;
-//    bool stop = false;
-//    int index = threadIdx.x;
-//
-//    while (!stop) {
-//        const bool is_in_1 = sets[index].contains(ip[i]);
-//        const bool is_in_2 = sets[index].contains(iq[i]);
-//        if (is_in_1 or is_in_2 or i == P) {
-//            stop = true;
-//        }
-//        sets[index].insert(ip[i]);
-//        sets[index].insert(iq[i]);
-//        i += 1;
-//    }
-//    sets[index].reset();
-//    return i - 1;
-//}
-
-
 __device__
 int JacobiData::fetch_loop_range(int curr_idx) {
 //    Returns the int of the index up to which the next product can performed in parallel
@@ -192,11 +170,11 @@ void JacobiData::jacobi_product_parallel(int block_size) {
         int index = threadIdx.x;
         int stride = block_size;
 
-            for (int i = index; i < nb_p_mat * d; i+=stride) {
-                col_idx = i % d;
-                mat_idx = (int) i / d + curr_p_idx;
-                rotate(A, ip[mat_idx], col_idx, iq[mat_idx], c[mat_idx], s[mat_idx]);
-            }
+        for (int i = index; i < nb_p_mat * d; i+=stride) {
+            col_idx = i % d;
+            mat_idx = (int) i / d + curr_p_idx;
+            rotate(A, ip[mat_idx], col_idx, iq[mat_idx], c[mat_idx], s[mat_idx]);
+        }
         //synchronize the local threads in the block
         __syncthreads();
         curr_p_idx = curr_max_p;
