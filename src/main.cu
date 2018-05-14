@@ -20,7 +20,10 @@ __global__ void compute(JacobiData *jacobi_array, int optimisation) {
 
 void cpu_run(JacobiData *jacobi_array) {
     if(DEBUG){
-        jacobi.debug_fill();
+        for (int i = 0; i < N_PROBLEMS; ++i) {
+            jacobi_array[i].debug_fill();
+        }
+
     }
     for (int i = 0; i < N_PROBLEMS; ++i) {
         jacobi_array[i].jacobi_product();
