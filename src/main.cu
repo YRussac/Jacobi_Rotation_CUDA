@@ -44,7 +44,31 @@ __global__ void compute(JacobiData *jacobi_array, int optimisation) {
 //                    jacobi_array[i_block].jacobi_product_parallel_cols(N_THREADS - 1);
                 }
                 if (optimisation == 3) {
-                    jacobi_array[i_block].jacobi_product_parallel(N_THREADS - 1);
+                    int col_idx;
+                    int mat_idx;
+                    int P = jacobi_array[i_block].P;
+                    int d = jacobi_array[i_block].d;
+
+                    int curr_p_idx = 0;
+                    int curr_max_p = jacobi_array[i_block].fetch_loop_range(curr_p_idx);
+
+                    while (curr_p_idx < P){
+                        int nb_p_mat = curr_max_p - curr_p_idx;
+                        int th_index = threadIdx.x;
+                        int th_stride = blockDim.x;
+
+                        for (int i_th = th_index; i_th < nb_p_mat * d; i_th+=th_stride) {
+                            col_idx = i_th % d;
+                            mat_idx = curr_p_idx + (int) i_th / d;
+                            jacobi_array[i_block].abstract_rotate(mat_idx, col_idx);
+//                            rotate(A, ip[mat_idx], col_idx, iq[mat_idx], c[mat_idx], s[mat_idx]);
+                        }
+                        //synchronize the local threads in the block
+                        __syncthreads();
+                        curr_p_idx = curr_max_p;
+                        curr_max_p = jacobi_array[i_block].fetch_loop_range(curr_p_idx);
+
+                    }
                 }
 
                 if (optimisation == 1){
