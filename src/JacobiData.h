@@ -14,6 +14,8 @@ public:
 
     void jacobi_product();
 
+    void abstract_rotate(int step, int i);
+
     void free_memory();
 
     void fill_angle_vectors();

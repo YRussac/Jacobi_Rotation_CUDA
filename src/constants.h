@@ -1,10 +1,10 @@
-const int N_PROBLEMS = 100;
-const int N_BLOCKS = 10;
-const int N_THREADS = 31; // N_THREADS > 1 REQUIRED
-const int GLOBAL_P = 10000;
-const int GLOBAL_d = 30;
+const int OPTIMISATION = 2;
+const int N_PROBLEMS = 50;
+const int N_BLOCKS = 32;
+const int GLOBAL_P = 400;
+const int GLOBAL_d = 400;
+const int N_THREADS = 256; // N_THREADS > 1 REQUIRED
 const int GLOBAL_min_A = 0;
 const int GLOBAL_max_A = 10;
-const int OPTIMISATION = 1;
 const bool DEBUG = false;
-const int NB_EXP = 5;
+const int NB_EXP = 15;

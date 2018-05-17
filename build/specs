@@ -1,0 +1,21 @@
+The number of devices available is 1 GPUs 
+Name GeForce GTX 670MX
+Global memory size in octet (bytes): -1138819072 
+Shared memory size per block: 49152
+Number of registers per block: 65536
+Number of threads in a warp: 32
+Maximum number of threads that can be launched per block: 1024 
+Maximum number of threads that can be launched: 1024 X 1024 X 64
+Maximum grid size: 2147483647 X 65535 X 65535
+Total Constant Memory Size: 65536
+Major Compute capability: 3
+Minor Compute capability: 0
+Clock Rate : 601000
+Maximum 1D texture memory: 65536
+Could we overlap? 1 
+Number of multiprocessors: 5 
+Is there a limit for kernel execution? 1 
+Is my GPU a chipset? 0
+Can we map the host memory? 1 
+Can we launch concurrent kernels: 1
+Do we have ECC memory 0

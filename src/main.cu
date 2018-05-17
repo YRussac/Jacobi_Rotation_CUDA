@@ -23,27 +23,35 @@ __global__ void compute(JacobiData *jacobi_array, int optimisation) {
         }
     }
     else{
-        int index = blockIdx.x;
-        int stride = N_BLOCKS;
-        for (int i = index; i < N_PROBLEMS; i += stride) {
-            if (threadIdx.x == (N_THREADS - 1)){
+        int block_index = blockIdx.x;
+        int block_stride = N_BLOCKS;
+        for (int i_block = block_index; i_block < N_PROBLEMS; i_block += block_stride) {
 
-                clock_t start_time = clock();
 
-                if (optimisation == 1){
-                    jacobi_array[i].jacobi_product();
-                }
                 if (optimisation == 2){
-                    jacobi_array[i].jacobi_product_parallel_cols(N_THREADS - 1);
+                    //    Parallelise the matrix rotation only
+                    int th_index = threadIdx.x;
+                    int th_stride = blockDim.x;
+                    for (int th_step = 0; th_step < jacobi_array[i_block].P; th_step++) {
+                    // Spread the columns rotations over the threads
+                        for (int i_th = th_index; i_th < jacobi_array[i_block].d; i_th += th_stride) {
+                            jacobi_array[i_block].abstract_rotate(th_step, i_th);
+                        }
+                        //synchronize the local threads in the block
+                        __syncthreads();
+                    }
+
+//                    jacobi_array[i_block].jacobi_product_parallel_cols(N_THREADS - 1);
                 }
                 if (optimisation == 3) {
-                    jacobi_array[i].jacobi_product_parallel(N_THREADS - 1);
+                    jacobi_array[i_block].jacobi_product_parallel(N_THREADS - 1);
                 }
 
-                clock_t stop_time = clock();
-                int duration = (int)(stop_time - start_time);
-//            printf("Hello from block %d, thread %d with the int %i %d\n",
-//                   blockIdx.x, threadIdx.x,i, duration);
+                if (optimisation == 1){
+                    if (threadIdx.x == (N_THREADS - 1)){
+                        jacobi_array[i_block].jacobi_product();
+                }
+
             }
         }
     }

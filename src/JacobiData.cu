@@ -109,6 +109,13 @@ void JacobiData::jacobi_product() {
     }
 }
 
+
+__device__ __host__
+void JacobiData::abstract_rotate(int step, int i) {
+    rotate(A, ip[step], i, iq[step], c[step], s[step]);
+}
+
+
 __device__ __host__
 
 void JacobiData::rotate(float *a, int i, int j, int k, float c, float s) {
@@ -172,7 +179,7 @@ void JacobiData::jacobi_product_parallel(int block_size) {
 
         for (int i = index; i < nb_p_mat * d; i+=stride) {
             col_idx = i % d;
-            mat_idx = (int) i / d + curr_p_idx;
+            mat_idx = curr_p_idx + (int) i / d;
             rotate(A, ip[mat_idx], col_idx, iq[mat_idx], c[mat_idx], s[mat_idx]);
         }
         //synchronize the local threads in the block
@@ -181,4 +188,5 @@ void JacobiData::jacobi_product_parallel(int block_size) {
         curr_max_p = fetch_loop_range(curr_p_idx);
 
     }
+    __syncthreads();
 }
